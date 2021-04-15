@@ -1,30 +1,20 @@
-import React from 'react';
-import Avatar from '@material-ui/core/Avatar';
-import Button from '@material-ui/core/Button';
-import CssBaseline from '@material-ui/core/CssBaseline';
-import TextField from '@material-ui/core/TextField';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import Checkbox from '@material-ui/core/Checkbox';
-import Link from '@material-ui/core/Link';
-import Grid from '@material-ui/core/Grid';
-import Box from '@material-ui/core/Box';
-import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
-import Typography from '@material-ui/core/Typography';
+import React, { useState } from 'react';
+import { Avatar, Button, CssBaseline, TextField, Typography, Container, FormControl, OutlinedInput, Grid, Link } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import Container from '@material-ui/core/Container';
 
-function Copyright() {
-  return (
-    <Typography variant="body2" color="textSecondary" align="center">
-      {'Copyright © '}
-      <Link color="inherit" href="https://material-ui.com/">
-        Your Website
-      </Link>{' '}
-      {new Date().getFullYear()}
-      {'.'}
-    </Typography>
-  );
-}
+import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
+import Visibility from '@material-ui/icons/Visibility';
+import VisibilityOff from '@material-ui/icons/VisibilityOff';
+
+import InputLabel from '@material-ui/core/InputLabel';
+import InputAdornment from '@material-ui/core/InputAdornment';
+import IconButton from '@material-ui/core/IconButton';
+import CircularProgress from '@material-ui/core/CircularProgress';
+
+import api from '../../services/api';
+
+import { setNomeUsuario, login, setIdUsuario, setEmailUsuario } from '../../services/auth';
+
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -48,6 +38,39 @@ const useStyles = makeStyles((theme) => ({
 
 export default function SignIn() {
   const classes = useStyles();
+  const [email, setEmail] = useState('');
+  const [senha, setSenha] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit() {
+
+    await api.post('/api/users/login', { email, senha })
+      .then(res => {
+        if (res.status === 200) {
+          if (res.data.status === 1) {
+            login(res.data.token);
+            setIdUsuario(res.data.id_client);
+            setNomeUsuario(res.data.user_name);
+            setEmailUsuario(res.data.client_email);
+            window.location.href = '/'
+          } else if (res.data.status === 2) {
+            alert('Atenção: ' + res.data.error);
+          }
+          setLoading(false);
+        } else {
+          alert('Erro no servidor');
+          setLoading(false);
+        }
+      })
+  }
+  function loadSubmit() {
+    setLoading(true);
+    setTimeout(
+      () => handleSubmit(),
+      2000
+    )
+  }
 
   return (
     <Container component="main" maxWidth="xs">
@@ -57,61 +80,58 @@ export default function SignIn() {
           <LockOutlinedIcon />
         </Avatar>
         <Typography component="h1" variant="h5">
-          Sign in
+          Login
         </Typography>
-        <form className={classes.form} noValidate>
-          <TextField
-            variant="outlined"
-            margin="normal"
-            required
-            fullWidth
-            id="email"
-            label="Email Address"
-            name="email"
-            autoComplete="email"
-            autoFocus
+        <TextField
+          variant="outlined"
+          margin="normal"
+          required
+          fullWidth
+          id="email"
+          label="Digite seu email"
+          name="email"
+          autoComplete="email"
+          autoFocus
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+        />
+        <FormControl variant="outlined" style={{ width: '100%', marginTop: 10 }}>
+          <InputLabel htmlFor="campoSenha">Digite sua senha</InputLabel>
+          <OutlinedInput
+            id="campoSenha"
+            type={showPassword ? 'text' : 'password'}
+            value={senha}
+            onChange={e => setSenha(e.target.value)}
+            endAdornment={
+              <InputAdornment position="end">
+                <IconButton
+                  aria-label="toggle password visibility"
+                  onClick={e => setShowPassword(!showPassword)}
+                  edge="end"
+                >
+                  {showPassword ? <Visibility /> : <VisibilityOff />}
+                </IconButton>
+              </InputAdornment>
+            }
+            labelWidth={120}
           />
-          <TextField
-            variant="outlined"
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="current-password"
-          />
-          <FormControlLabel
-            control={<Checkbox value="remember" color="primary" />}
-            label="Remember me"
-          />
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            color="primary"
-            className={classes.submit}
-          >
-            Sign In
-          </Button>
-          <Grid container>
-            <Grid item xs>
-              <Link href="#" variant="body2">
-                Forgot password?
-              </Link>
-            </Grid>
-            <Grid item>
-              <Link href="#" variant="body2">
-                {"Don't have an account? Sign Up"}
-              </Link>
-            </Grid>
-          </Grid>
-        </form>
+        </FormControl>
+        <Button
+          fullWidth
+          variant="contained"
+          color="primary"
+          className={classes.submit}
+          onClick={loadSubmit}
+          disabled={loading}
+        >
+          {loading ? <CircularProgress /> : "ENTRAR"}
+        </Button>
+        <Grid item>
+          <Link href="/register" variant="body2">
+            {"Don't have an account? Sign Up"}
+          </Link>
+        </Grid>
       </div>
-      <Box mt={8}>
-        <Copyright />
-      </Box>
     </Container>
   );
 }

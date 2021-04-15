@@ -2,22 +2,22 @@ const mongoose = require('mongoose');
 const shortid = require('shortid');
 
 const DataSchema = new mongoose.Schema({
-    url_full:{
-        type:String,
+    url_full: {
+        type: String,
         required: true
     },
-    url_short:{
-        type:String,
-        require:true,
+    url_short: {
+        type: String,
+        require: true,
         default: shortid.generate
     },
-    email_user:{
+    email_user: {
         type: String
     },
 
-},{
-    timestamps:true
+}, {
+    timestamps: true
 });
 
-const urls = mongoose.model('Urls',DataSchema);
+const urls = mongoose.model('Urls', DataSchema);
 module.exports = urls;
